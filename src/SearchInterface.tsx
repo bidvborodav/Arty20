@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Mic, Camera } from 'lucide-react';
 import CameraView from './components/CameraView';
 import ReactMarkdown from 'react-markdown';
-import { MarkdownProps } from './types/markdown';
+import { MarkdownComponentProps } from './types/markdown';
 import AudioPlayer from './components/AudioPlayer';
 
 interface Suggestion {
@@ -171,37 +171,37 @@ const SearchInterface = () => {
   }, []);
 
   const markdownComponents = {
-    h1: ({ children, ...props }: MarkdownProps) => (
+    h1: ({ children, ...props }: MarkdownComponentProps) => (
       <h1 className="text-2xl font-bold mb-4 mt-6" {...props}>{children}</h1>
     ),
-    h2: ({ children, ...props }: MarkdownProps) => (
+    h2: ({ children, ...props }: MarkdownComponentProps) => (
       <h2 className="text-xl font-bold mb-3 mt-5" {...props}>{children}</h2>
     ),
-    h3: ({ children, ...props }: MarkdownProps) => (
+    h3: ({ children, ...props }: MarkdownComponentProps) => (
       <h3 className="text-lg font-bold mb-2 mt-4" {...props}>{children}</h3>
     ),
-    p: ({ children, ...props }: MarkdownProps) => (
+    p: ({ children, ...props }: MarkdownComponentProps) => (
       <p className="mb-4" {...props}>{children}</p>
     ),
-    ul: ({ children, ...props }: MarkdownProps) => (
+    ul: ({ children, ...props }: MarkdownComponentProps) => (
       <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>
     ),
-    ol: ({ children, ...props }: MarkdownProps) => (
+    ol: ({ children, ...props }: MarkdownComponentProps) => (
       <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>
     ),
-    li: ({ children, ...props }: MarkdownProps) => (
+    li: ({ children, ...props }: MarkdownComponentProps) => (
       <li className="mb-2" {...props}>{children}</li>
     ),
-    strong: ({ children, ...props }: MarkdownProps) => (
+    strong: ({ children, ...props }: MarkdownComponentProps) => (
       <strong className="font-bold text-purple-700" {...props}>{children}</strong>
     ),
-    em: ({ children, ...props }: MarkdownProps) => (
+    em: ({ children, ...props }: MarkdownComponentProps) => (
       <em className="italic text-purple-600" {...props}>{children}</em>
     ),
-    blockquote: ({ children, ...props }: MarkdownProps) => (
+    blockquote: ({ children, ...props }: MarkdownComponentProps) => (
       <blockquote className="border-l-4 border-purple-300 pl-4 my-4 italic" {...props}>{children}</blockquote>
     ),
-    code: ({ children, inline, ...props }: MarkdownProps) => (
+    code: ({ children, inline, ...props }: MarkdownComponentProps) => (
       inline ? 
         <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>{children}</code> :
         <code className="block bg-gray-100 rounded p-4 my-4 overflow-auto" {...props}>{children}</code>
