@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Mic, Camera, Search } from 'lucide-react';
+import { Mic, Camera } from 'lucide-react';
 import CameraView from './components/CameraView';
 import ReactMarkdown from 'react-markdown';
+import { MarkdownProps } from './types/markdown';
+import AudioPlayer from './components/AudioPlayer';
 
 interface Suggestion {
   text: string;
@@ -14,6 +16,7 @@ const SearchInterface = () => {
   const [response, setResponse] = useState('');
   const [error, setError] = useState('');
   const [showCamera, setShowCamera] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const suggestions: Suggestion[] = [
     {
@@ -47,29 +50,66 @@ const SearchInterface = () => {
   const handleSearch = async (queryText: string = searchQuery) => {
     setIsLoading(true);
     setError('');
+    setAudioUrl(null);
     
     try {
-      const response = await fetch('http://localhost:3001/api/openai', {
+      // Get the audio response
+      const audioResponse = await fetch('http://localhost:3001/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: queryText.trim().slice(0, 500),
-          systemPrompt: "You are an AI tour guide for children under 12 visiting the Neues Museum in Berlin. Your job is to explain the exhibits and artifacts in a fun, simple, and engaging way, making history come alive for young minds. Use child-friendly language, include fascinating stories, and encourage curiosity. Format your responses using Markdown for better readability."
+          messages: [
+            {
+              role: "system",
+              content: "You are an AI tour guide for children under 12 visiting the Neues Museum in Berlin. Your job is to explain the exhibits and artifacts in a fun, simple, and engaging way, making history come alive for young minds. Use child-friendly language, include fascinating stories, and encourage curiosity."
+            },
+            {
+              role: "user",
+              content: queryText.trim()
+            }
+          ]
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!audioResponse.ok) {
+        throw new Error(`HTTP error! status: ${audioResponse.status}`);
       }
 
-      const data = await response.json();
+      // Create a blob from the audio response
+      const audioBlob = await audioResponse.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      setAudioUrl(audioUrl);
+
+      // Get the text response
+      const textResponse = await fetch('http://localhost:3001/api/chat/text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content: "You are an AI tour guide for children under 12 visiting the Neues Museum in Berlin. Your job is to explain the exhibits and artifacts in a fun, simple, and engaging way, making history come alive for young minds. Use child-friendly language, include fascinating stories, and encourage curiosity. Format your responses using Markdown for better readability."
+            },
+            {
+              role: "user",
+              content: queryText.trim()
+            }
+          ]
+        })
+      });
+
+      if (!textResponse.ok) {
+        throw new Error(`HTTP error! status: ${textResponse.status}`);
+      }
+
+      const data = await textResponse.json();
       
-      if (data.response) {
-        setResponse(data.response);
-      } else if (data.error) {
-        throw new Error(data.error);
+      if (data.message) {
+        setResponse(data.message);
       } else {
         throw new Error('Invalid response structure');
       }
@@ -84,6 +124,7 @@ const SearchInterface = () => {
   const handleImageCapture = async (imageData: string) => {
     setIsLoading(true);
     setError('');
+    setAudioUrl(null);
     
     try {
       const response = await fetch('http://localhost:3001/api/openai', {
@@ -130,22 +171,40 @@ const SearchInterface = () => {
   }, []);
 
   const markdownComponents = {
-    h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-6" {...props} />,
-    h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 mt-5" {...props} />,
-    h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 mt-4" {...props} />,
-    p: ({ node, ...props }) => <p className="mb-4" {...props} />,
-    ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4" {...props} />,
-    ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4" {...props} />,
-    li: ({ node, ...props }) => <li className="mb-2" {...props} />,
-    strong: ({ node, ...props }) => <strong className="font-bold text-purple-700" {...props} />,
-    em: ({ node, ...props }) => <em className="italic text-purple-600" {...props} />,
-    blockquote: ({ node, ...props }) => (
-      <blockquote className="border-l-4 border-purple-300 pl-4 my-4 italic" {...props} />
+    h1: ({ children, ...props }: MarkdownProps) => (
+      <h1 className="text-2xl font-bold mb-4 mt-6" {...props}>{children}</h1>
     ),
-    code: ({ node, inline, ...props }) => (
+    h2: ({ children, ...props }: MarkdownProps) => (
+      <h2 className="text-xl font-bold mb-3 mt-5" {...props}>{children}</h2>
+    ),
+    h3: ({ children, ...props }: MarkdownProps) => (
+      <h3 className="text-lg font-bold mb-2 mt-4" {...props}>{children}</h3>
+    ),
+    p: ({ children, ...props }: MarkdownProps) => (
+      <p className="mb-4" {...props}>{children}</p>
+    ),
+    ul: ({ children, ...props }: MarkdownProps) => (
+      <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>
+    ),
+    ol: ({ children, ...props }: MarkdownProps) => (
+      <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>
+    ),
+    li: ({ children, ...props }: MarkdownProps) => (
+      <li className="mb-2" {...props}>{children}</li>
+    ),
+    strong: ({ children, ...props }: MarkdownProps) => (
+      <strong className="font-bold text-purple-700" {...props}>{children}</strong>
+    ),
+    em: ({ children, ...props }: MarkdownProps) => (
+      <em className="italic text-purple-600" {...props}>{children}</em>
+    ),
+    blockquote: ({ children, ...props }: MarkdownProps) => (
+      <blockquote className="border-l-4 border-purple-300 pl-4 my-4 italic" {...props}>{children}</blockquote>
+    ),
+    code: ({ children, inline, ...props }: MarkdownProps) => (
       inline ? 
-        <code className="bg-gray-100 rounded px-1 py-0.5" {...props} /> :
-        <code className="block bg-gray-100 rounded p-4 my-4 overflow-auto" {...props} />
+        <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>{children}</code> :
+        <code className="block bg-gray-100 rounded p-4 my-4 overflow-auto" {...props}>{children}</code>
     ),
   };
 
@@ -227,10 +286,12 @@ const SearchInterface = () => {
               >
                 {response}
               </ReactMarkdown>
+              {audioUrl && <AudioPlayer audioUrl={audioUrl} />}
               <button 
                 onClick={() => {
                   setResponse('');
                   setSearchQuery('');
+                  setAudioUrl(null);
                 }}
                 className="mt-4 text-purple-500 hover:text-purple-700 font-medium"
               >
