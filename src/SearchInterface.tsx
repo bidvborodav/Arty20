@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mic, Camera, Search } from 'lucide-react';
 import CameraView from './components/CameraView';
+import ReactMarkdown from 'react-markdown';
 
 interface Suggestion {
   text: string;
@@ -55,7 +56,7 @@ const SearchInterface = () => {
         },
         body: JSON.stringify({
           query: queryText.trim().slice(0, 500),
-          systemPrompt: "You are an AI tour guide for children under 12 visiting the Neues Museum in Berlin. Your job is to explain the exhibits and artifacts in a fun, simple, and engaging way, making history come alive for young minds. Use child-friendly language, include fascinating stories, and encourage curiosity."
+          systemPrompt: "You are an AI tour guide for children under 12 visiting the Neues Museum in Berlin. Your job is to explain the exhibits and artifacts in a fun, simple, and engaging way, making history come alive for young minds. Use child-friendly language, include fascinating stories, and encourage curiosity. Format your responses using Markdown for better readability."
         })
       });
 
@@ -91,9 +92,9 @@ const SearchInterface = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: "Please describe what you see in this image and provide interesting facts about it that would engage children under 12.",
+          query: "Please describe what you see in this image and provide interesting facts about it that would engage children under 12. Use markdown formatting with headers, lists, and bold text to make it more readable.",
           image: imageData,
-          systemPrompt: "You are an AI tour guide for children under 12 visiting the Neues Museum in Berlin. Your job is to explain the exhibits and artifacts in a fun, simple, and engaging way, making history come alive for young minds. Use child-friendly language, include fascinating stories, and encourage curiosity."
+          systemPrompt: "You are an AI tour guide for children under 12 visiting the Neues Museum in Berlin. Your job is to explain the exhibits and artifacts in a fun, simple, and engaging way, making history come alive for young minds. Use child-friendly language, include fascinating stories, and encourage curiosity. Format your responses using Markdown for better readability. Ignore everything except exhibits and artifacts, because people may be there as well"
         })
       });
 
@@ -127,6 +128,26 @@ const SearchInterface = () => {
   React.useEffect(() => {
     testServer();
   }, []);
+
+  const markdownComponents = {
+    h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-6" {...props} />,
+    h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 mt-5" {...props} />,
+    h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 mt-4" {...props} />,
+    p: ({ node, ...props }) => <p className="mb-4" {...props} />,
+    ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4" {...props} />,
+    ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4" {...props} />,
+    li: ({ node, ...props }) => <li className="mb-2" {...props} />,
+    strong: ({ node, ...props }) => <strong className="font-bold text-purple-700" {...props} />,
+    em: ({ node, ...props }) => <em className="italic text-purple-600" {...props} />,
+    blockquote: ({ node, ...props }) => (
+      <blockquote className="border-l-4 border-purple-300 pl-4 my-4 italic" {...props} />
+    ),
+    code: ({ node, inline, ...props }) => (
+      inline ? 
+        <code className="bg-gray-100 rounded px-1 py-0.5" {...props} /> :
+        <code className="block bg-gray-100 rounded p-4 my-4 overflow-auto" {...props} />
+    ),
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -200,7 +221,12 @@ const SearchInterface = () => {
 
           {response && !isLoading && (
             <div className="bg-white rounded-lg p-6 shadow-lg">
-              <p className="text-gray-800 text-lg leading-relaxed">{response}</p>
+              <ReactMarkdown 
+                components={markdownComponents}
+                className="prose prose-purple max-w-none"
+              >
+                {response}
+              </ReactMarkdown>
               <button 
                 onClick={() => {
                   setResponse('');
